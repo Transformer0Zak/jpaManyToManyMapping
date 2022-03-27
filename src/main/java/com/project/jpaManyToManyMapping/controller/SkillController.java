@@ -3,13 +3,18 @@ package com.project.jpaManyToManyMapping.controller;
 
 import com.project.jpaManyToManyMapping.exception.SkillAlreadyExistException;
 import com.project.jpaManyToManyMapping.exception.SkillNotFoundException;
+import com.project.jpaManyToManyMapping.model.JobSeeker;
 import com.project.jpaManyToManyMapping.model.Skill;
+import com.project.jpaManyToManyMapping.repository.JobSeekerRepository;
+import com.project.jpaManyToManyMapping.repository.SkillRepository;
+import com.project.jpaManyToManyMapping.service.JobSeekerService;
 import com.project.jpaManyToManyMapping.service.SkillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -17,10 +22,16 @@ import java.util.List;
 public class SkillController {
     private ResponseEntity responseEntity;
     private SkillService skillService;
+    private SkillRepository skillRepository;
+    private JobSeekerRepository jobSeekerRepository;
+
 
     @Autowired
-    public SkillController(SkillService skillService) {
+    public SkillController(SkillService skillService, SkillRepository skillRepository, JobSeekerRepository jobSeekerRepository) {
         this.skillService = skillService;
+        this.jobSeekerRepository = jobSeekerRepository;
+        this.skillRepository = skillRepository;
+
     }
 
     @PostMapping("/skill")
@@ -60,6 +71,31 @@ public class SkillController {
         }
         return responseEntity;
     }
+    @PostMapping("/jobSeeker/{jobSeekerId}/skills")
+    public ResponseEntity<Skill> addSkill(@PathVariable("jobSeekerId") int jobSeekerId, @RequestBody Skill skillRequest) throws SkillNotFoundException {
+        Skill skill = jobSeekerRepository.findById(jobSeekerId).map(jobSeeker -> {
+            int skillId = skillRequest.getSkillId();
 
 
+            if (skillId != 0) {
+
+                Skill skill1 = null;
+                try {
+                    skill1 = skillRepository.findById(skillId).orElseThrow(() -> new SkillNotFoundException("Skill NOt Found"));
+                } catch (SkillNotFoundException e) {
+                    e.printStackTrace();
+                }
+                jobSeeker.addSkill(skill1);
+                jobSeekerRepository.save(jobSeeker);
+                return skill1;
+            }
+
+                jobSeeker.addSkill(skillRequest);
+                return skillRepository.save(skillRequest);
+            }).orElseThrow(()-> new SkillNotFoundException("Skill Not Found"));
+
+
+        return new ResponseEntity<>(skill, HttpStatus.CREATED);
+
+    }
 }

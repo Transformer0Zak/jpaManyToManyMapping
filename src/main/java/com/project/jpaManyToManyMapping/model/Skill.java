@@ -1,6 +1,7 @@
 package com.project.jpaManyToManyMapping.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,10 @@ import java.util.List;
 public class Skill {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
-//    @Column (name = "skill_id")
     private int skillId;
-//    @Column (name ="skill")
     private String skill;
     @ManyToMany (fetch = FetchType.LAZY,cascade = CascadeType.ALL, mappedBy = "skills")
+    @JsonIgnore
     private List<JobSeeker> jobSeekers;
 
 }
